@@ -8,11 +8,14 @@ module Rack
 
     # options :to(files) :path_rule?
     # :request_validator? session or permission
-    # :mandator => a object respond_to create_for
+    # :surrogate => a object respond_to ship! discharge!
     def initialize(app, options={})
       @app      = app
       @to       = options[:to] || 'files'
-      @mandator = options[:mandator]
+      @surrogate = options[:surrogate]
+      unless @surrogate.respond_to?(:ship!) && @surrogate.respond_to?(:discharge!)
+        raise ArgumentError, 'surrogate missing'
+      end
     end
 
     # check the request whether has the ability to attachment file
@@ -24,29 +27,28 @@ module Rack
 
         env['rack.request.form_input'] = env['rack.input']
         env['rack.request.form_hash'] ||= {}
-        env['rack.request.query_hash'] ||= {}
 
         fields = extract_file_fields(env['rack.request.form_hash']).
                   flatten.compact
 
-        # TODO mandator
-        json = '[]'
+        unless fields.empty?
+          json = '[]'
+          begin
+            json = @surrogate.ship!(fields)
+          rescue Exception => e
+            raise e
+          end
+          fields_should_be_deleted = file_field_keys(fields)
+          delete_file_fields!(env, fields_should_be_deleted)
+          update_request_params!(env['rack.request.form_hash'], {@to => json})
+        end
         #json = if post?
-        #  @mandator.create_for!(fields)#
+        #
         #elsif put?
-        #  @mandator.create_for(fields)
-        # [AFTER] HTTP_HEADER => "HTTP_RESOURCE_ORIGINAL_FILES"
+        #  @surrogate.ship
+        #[AFTER] HTTP_HEADER => "HTTP_RESOURCE_ORIGINAL_FILES"
         #  send this to delay job or resque
         #end
-
-        fields_should_be_deleted = fields.collect {
-            |field| field[:name].split("[").first.to_s
-        }.uniq
-
-        delete_file_fields!(env, fields_should_be_deleted)
-
-        update_request_params!(env['rack.request.form_hash'], { @to => json })
-
       end
       @app.call(env)
     end
@@ -107,6 +109,12 @@ module Rack
           fields << nil
         end
       end
+    end
+
+    def file_field_keys(fields)
+      fields.collect {
+            |field| field[:name].split("[").first.to_s
+        }.uniq
     end
 
     def delete_file_fields!(env, fields)
