@@ -32,12 +32,13 @@ module Rack
                   flatten.compact
 
         unless fields.empty?
-          json = '[]'
-          begin
-            json = @surrogate.ship!(fields)
-          rescue Exception => e
-            raise e
-          end
+          # TODO
+          #json = '[]'
+          #begin
+          #  json = @surrogate.ship!(fields)
+          #rescue Exception => e
+          #  raise e
+          #end
           fields_should_be_deleted = file_field_keys(fields)
           delete_file_fields!(env, fields_should_be_deleted)
           update_request_params!(env['rack.request.form_hash'], {@to => json})
