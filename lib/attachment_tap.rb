@@ -1,5 +1,2 @@
-require "attachment_tap/version"
-
-module AttachmentTap
-  # Your code goes here...
-end
+# encoding: utf-8
+require "rack/attachment_tap"
