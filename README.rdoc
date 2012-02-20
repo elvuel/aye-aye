@@ -1,3 +1,11 @@
+== usage
+  gem build attachment_tap.gemspec
+  gem install attachemnt_tap-VERSION.gem
+  Gemfile:
+	gem "attachment_tap", require: 'rack/attachment_tap'
+  App.rb
+	use Rack::AttachmentTap, :surrogate => Surrogate, [:to => 'files']
+
 == Surrogate Example
 
 # gem "rest-client"
