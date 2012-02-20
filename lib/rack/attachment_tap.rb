@@ -5,7 +5,7 @@ require 'json'
 module Rack
   class AttachmentTap
 
-    VERSION = "1.0".freeze
+    VERSION = "1.0"
 
     # options :to(files) :path_rule?
     # :request_validator? session or permission
