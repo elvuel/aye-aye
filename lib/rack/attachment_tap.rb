@@ -1,5 +1,6 @@
 # encoding: utf-8
 require 'tempfile'
+require 'json'
 
 module Rack
   class AttachmentTap
@@ -29,27 +30,35 @@ module Rack
         env['rack.request.form_hash'] ||= {}
 
         fields = extract_file_fields(env['rack.request.form_hash']).
-                  flatten.compact
+            flatten.compact
 
-        unless fields.empty?
+        if fields.empty?
+          update_request_params!(env['rack.request.form_hash'], {@to => '[]'})
+        else
           # TODO
-          #json = '[]'
-          #begin
-          #  json = @surrogate.ship!(fields)
-          #rescue Exception => e
-          #  raise e
-          #end
+          # based on request content_type?
+          json = @surrogate.ship!(fields)
+          parsed_json = JSON.parse(json)
+          if parsed_json.is_a?(Hash) && parsed_json["error"]
+            return [502, {
+                "Content-Type" => "application/json",
+                "Cache-Control" => "no-store" },
+                [json]
+            ]
+          end
+
+          # TODO
+          # put? pending
+          # @surrogate.ship!(fields)
+          #         #?[AFTER] HTTP_HEADER => "HTTP_RESOURCE_ORIGINAL_FILES"
+          #
+          # @surrogate.discharge!(old_files_to_be_deleted)
+          # send this to delay job or resque # return nothing
+
           fields_should_be_deleted = file_field_keys(fields)
           delete_file_fields!(env, fields_should_be_deleted)
           update_request_params!(env['rack.request.form_hash'], {@to => json})
         end
-        #json = if post?
-        #
-        #elsif put?
-        #  @surrogate.ship
-        #[AFTER] HTTP_HEADER => "HTTP_RESOURCE_ORIGINAL_FILES"
-        #  send this to delay job or resque
-        #end
       end
       @app.call(env)
     end
@@ -58,9 +67,9 @@ module Rack
 
     def tap_in?(env)
       request_method_raw?(env) &&
-        content_type_raw?(env) &&
+          content_type_raw?(env) &&
           has_content?(env) &&
-            session_scoped?(env)
+          session_scoped?(env)
     end
 
     def post?(env)
@@ -72,7 +81,7 @@ module Rack
     end
 
     def request_method_raw?(env)
-      post?(env) || put?(env)
+      post?(env)# || put?(env)
     end
 
     def content_type_raw?(env)
@@ -114,8 +123,8 @@ module Rack
 
     def file_field_keys(fields)
       fields.collect {
-            |field| field[:name].split("[").first.to_s
-        }.uniq
+          |field| field[:name].split("[").first.to_s
+      }.uniq
     end
 
     def delete_file_fields!(env, fields)

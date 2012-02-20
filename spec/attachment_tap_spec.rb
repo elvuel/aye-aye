@@ -3,6 +3,7 @@
 require 'minitest/autorun'
 require 'tempfile'
 require 'json'
+
 require File.expand_path('../../lib/rack/attachment_tap', __FILE__)
 
 class FakeApp
@@ -11,12 +12,25 @@ end
 
 class FakeSurrogate
   def self.ship!(files)
-    "{'id':'98d41a087efa9aa3b9ceb9d0','original':'/path/to/file'}"
+    [
+      {
+        :id => '98d41a087efa9aa3b9ceb9d0',
+        :original => 'path/to/file'
+      }
+    ].to_json
   end
 
   def self.discharge!(files)
     '{}'
   end
+end
+
+class FakeSurrogateSick
+  def self.ship!(files)
+    { error: 'file attach exception with md5s' }.to_json
+  end
+
+  def self.discharge!(files);end
 end
 
 describe Rack::AttachmentTap do
@@ -200,7 +214,71 @@ describe Rack::AttachmentTap do
   describe '#call' do
     before do
 
-    end
-  end
+      @file1 = {:filename => 'file 1', :type => 'type 1',
+               :name => 'name 1', :head => 'head 1',
+               :tempfile => ::Tempfile.new('tempfile1.')
+      }
+      @file2 = {:filename => 'file 2', :type => 'type 2',
+               :name => 'name 2', :head => 'head 2',
+               :tempfile => ::Tempfile.new('tempfile2.')
+      }
 
-end
+      @env = {
+          'REQUEST_METHOD' => 'POST',
+          'CONTENT_TYPE' => 'multipart/form-data; 0123456789abcdef',
+          'CONTENT_LENGTH' => '123',
+          'rack.request.form_hash' => {
+              'name' => 'attachment_tap'
+          }
+      }
+    end
+
+    describe 'no file fields' do
+      it 'update the request form hash to a empty array json string' do
+        @atap = Rack::AttachmentTap.new(FakeApp.new, {
+            :surrogate => FakeSurrogate
+        })
+        @env['rack.request.form_hash'].has_key?('files').must_equal false
+        @atap.call(@env)
+        @env['rack.request.form_hash'].has_key?('files').must_equal true
+        files = @env['rack.request.form_hash']['files']
+        files.must_be_kind_of String
+        parsed_files = JSON.parse(files)
+        parsed_files.must_be_kind_of Array
+        parsed_files.must_be_empty
+      end
+    end
+
+    describe 'got attach files' do
+      before do
+        @env['rack.request.form_hash']
+          .update('file1' => @file1, 'file2' => @file2)
+      end
+
+      it "return 502 with ship! error" do
+        @atap = Rack::AttachmentTap.new(FakeApp.new, {
+            :surrogate => FakeSurrogateSick
+        })
+        result = @atap.call(@env)
+        result.must_be_kind_of Array
+        result.first.must_equal 502
+      end
+
+      it "it update the env with ship! result" do
+        @atap = Rack::AttachmentTap.new(FakeApp.new, {
+            :surrogate => FakeSurrogate
+        })
+        @env['rack.request.form_hash'].has_key?('files').must_equal false
+        @atap.call(@env)
+        @env['rack.request.form_hash'].has_key?('files').must_equal true
+        files = @env['rack.request.form_hash']['files']
+        files.must_be_kind_of String
+        parsed_files = JSON.parse(files)
+        parsed_files.must_be_kind_of Array
+        parsed_files.any?.must_equal true
+        parsed_files.first["id"].must_equal '98d41a087efa9aa3b9ceb9d0'
+        parsed_files.first["original"].must_equal 'path/to/file'
+      end
+    end
+  end # call
+end # Rack::AttachmentTap
