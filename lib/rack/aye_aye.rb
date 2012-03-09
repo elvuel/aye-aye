@@ -11,10 +11,11 @@ module Rack
     # :request_validator? session or permission
     # :surrogate => a object respond_to ship! discharge!
     def initialize(app, options={})
-      @app      = app
-      @to       = options[:to] || 'files'
-      @surrogate = options[:surrogate]
-      unless @surrogate.respond_to?(:ship!) && @surrogate.respond_to?(:discharge!)
+      @app        = app
+      @to         = options[:to] || 'files'
+      @surrogate  = options[:surrogate]
+      unless @surrogate.respond_to?(:ship!) &&
+                @surrogate.respond_to?(:discharge!)
         raise ArgumentError, 'surrogate missing'
       end
     end
@@ -29,47 +30,44 @@ module Rack
         env['rack.request.form_input'] = env['rack.input']
         env['rack.request.form_hash'] ||= {}
 
-        fields = extract_file_fields(env['rack.request.form_hash']).
-            flatten.compact
+        fields = extract_file_fields(
+          env['rack.request.form_hash']
+        ).flatten.compact
 
-        if fields.empty?
+        if post?(env) && fields.empty?
           update_request_params!(env['rack.request.form_hash'], {@to => '[]'})
-        else
+        end
+
+        if fields.any?
           # TODO
           # based on request content_type?
           json = @surrogate.ship!(fields)
           parsed_json = JSON.parse(json)
           if parsed_json.is_a?(Hash) && parsed_json["error"]
             return [502, {
-                "Content-Type" => "application/json",
-                "Cache-Control" => "no-store" },
-                [json]
+                "Content-Type"  => "application/json",
+                "Cache-Control" => "no-store"},
+                    [json]
             ]
           end
-
-          # TODO
-          # put? pending
-          # @surrogate.ship!(fields)
-          #         #?[AFTER] HTTP_HEADER => "HTTP_RESOURCE_ORIGINAL_FILES"
-          #
-          # @surrogate.discharge!(old_files_to_be_deleted)
-          # send this to delay job or resque # return nothing
 
           fields_should_be_deleted = file_field_keys(fields)
           delete_file_fields!(env, fields_should_be_deleted)
           update_request_params!(env['rack.request.form_hash'], {@to => json})
-        end
-      end
+        end # fields.any?
+
+      end # tap_in?
+
       @app.call(env)
-    end
+    end # call
 
     protected
 
     def tap_in?(env)
       request_method_raw?(env) &&
-          content_type_raw?(env) &&
+        content_type_raw?(env) &&
           has_content?(env) &&
-          session_scoped?(env)
+            session_scoped?(env)
     end
 
     def post?(env)
@@ -81,7 +79,7 @@ module Rack
     end
 
     def request_method_raw?(env)
-      post?(env)# || put?(env)
+      post?(env) || put?(env)
     end
 
     def content_type_raw?(env)
@@ -110,7 +108,7 @@ module Rack
         if v.is_a?(Hash)
           if v.has_key?(:filename) && v.has_key?(:type) &&
               v.has_key?(:name) && v.has_key?(:tempfile) &&
-              v.has_key?(:head) && v[:tempfile].is_a?(Tempfile)
+                v.has_key?(:head) && v[:tempfile].is_a?(Tempfile)
             fields << v
           else
             fields << extract_file_fields(v)
@@ -122,8 +120,8 @@ module Rack
     end
 
     def file_field_keys(fields)
-      fields.collect {
-          |field| field[:name].split("[").first.to_s
+      fields.collect { |field|
+        field[:name].split("[").first.to_s
       }.uniq
     end
 

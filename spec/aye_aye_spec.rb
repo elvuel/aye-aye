@@ -52,7 +52,7 @@ describe Rack::AyeAye do
       Rack::AyeAye.new(FakeApp.new, { :surrogate => obj2 })
         .must_be_kind_of Rack::AyeAye
     end
-  end
+  end # initialize
 
   describe '#post?' do
     before do
@@ -60,15 +60,15 @@ describe Rack::AyeAye do
       @method = :post?
     end
     it 'request method is POST should return true' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method,  @key => 'POST').must_equal true
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method,  @key => 'POST').must_equal true
     end
 
     it 'require method not POST should return false' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method, @key => "post").must_equal false
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method, @key => "post").must_equal false
     end
-  end
+  end # post?
 
   describe '#put?' do
     before do
@@ -76,15 +76,15 @@ describe Rack::AyeAye do
       @method = :put?
     end
     it 'request method is PUT should return true' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method,  @key => 'PUT').must_equal true
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method,  @key => 'PUT').must_equal true
     end
 
     it 'require method not PUT should return false' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method, @key => "put").must_equal false
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method, @key => "put").must_equal false
     end
-  end
+  end # put?
 
   describe '#content_type_raw?' do
     before do
@@ -93,21 +93,21 @@ describe Rack::AyeAye do
     end
 
     it 'content type is multipart/form-data should return true' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method,  @key => 'multipart/form-data;12345').must_equal true
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method,  @key => 'multipart/form-data;12345').must_equal true
     end
 
     it 'content type is application/x-www-form-urlencoded should return true' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method,  @key => 'application/x-www-form-urlencoded;12345')
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method,  @key => 'application/x-www-form-urlencoded;12345')
         .must_equal true
     end
 
     it 'return false' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method, @key => 'text/html').must_equal false
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method, @key => 'text/html').must_equal false
     end
-  end
+  end # content_type_raw?
 
   describe '#has_content?' do
     before do
@@ -116,28 +116,28 @@ describe Rack::AyeAye do
     end
 
     it 'content length gt 0 return true' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method,  @key => '123').must_equal true
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method,  @key => '123').must_equal true
     end
 
     it 'content length lt 0 return true' do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method, @key => '0').must_equal false
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method, @key => '0').must_equal false
     end
-  end
+  end # has_content?
 
   describe '#extract_file_fields' do
     before do
       @method = :extract_file_fields
     end
     it "return nil if argument is not a Hash" do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      atap.send(@method, 123).must_be_nil
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye.send(@method, 123).must_be_nil
     end
 
     it "should return a empty array if not contains FILE field" do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      fields = atap.send(@method,
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      fields = aye_aye.send(@method,
              { 'text' => '123', 'not_file' => {"not" => "yes"} })
       fields.must_be_kind_of Array
       fields.flatten.compact.empty?.must_equal true
@@ -152,8 +152,8 @@ describe Rack::AyeAye do
           :name => 'name 2', :head => 'head 2',
           :tempfile => ::Tempfile.new('tempfile2.')
       }
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
-      fields = atap.send(@method, {
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      fields = aye_aye.send(@method, {
           'text' => 'info', 'some' => 'some',
           'file1' => file1, 'file2' => file2}
       )
@@ -163,7 +163,7 @@ describe Rack::AyeAye do
       [file1, file2].each { |f| fields.delete f }
       fields.empty?.must_equal true
     end
-  end
+  end # extract_file_fields
 
   describe '#file_field_keys' do
     before do
@@ -171,23 +171,23 @@ describe Rack::AyeAye do
     end
 
     it "should return a Array" do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
       ary = [{:name => 'first'}, {:name => 'second'}]
-      keys = atap.send(@method, ary)
+      keys = aye_aye.send(@method, ary)
       keys.must_be_kind_of Array
       keys.size.must_equal 2
       keys.must_equal ['first', 'second']
     end
 
     it "should return a unique Array" do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
       ary = [{:name => 'first'}, {:name => 'second'}, {:name => 'first[file]'}]
-      keys = atap.send(@method, ary)
+      keys = aye_aye.send(@method, ary)
       keys.must_be_kind_of Array
       keys.size.must_equal 2
       keys.must_equal ['first', 'second']
     end
-  end
+  end # file_field_keys
 
   describe '#delete_file_fields!' do
     before do
@@ -195,21 +195,21 @@ describe Rack::AyeAye do
     end
 
     it "should delete nothing" do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
       env = { 'rack.request.form_hash' => {'text' => 'text', 'name' => 'ok' } }
-      atap.send(@method, env, [])
+      aye_aye.send(@method, env, [])
       env['rack.request.form_hash'].has_key?('text').must_equal true
       env['rack.request.form_hash'].has_key?('name').must_equal true
     end
 
     it "should delete the specify key" do
-      atap = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
       env = { 'rack.request.form_hash' => {'text' => 'text', 'name' => 'ok' } }
-      atap.send(@method, env, ['text'])
+      aye_aye.send(@method, env, ['text'])
       env['rack.request.form_hash'].has_key?('text').must_equal false
       env['rack.request.form_hash'].has_key?('name').must_equal true
     end
-  end
+  end # delete_file_fields!
 
   describe '#call' do
     before do
@@ -223,62 +223,96 @@ describe Rack::AyeAye do
                :tempfile => ::Tempfile.new('tempfile2.')
       }
 
-      @env = {
+      @env_post = {
           'REQUEST_METHOD' => 'POST',
           'CONTENT_TYPE' => 'multipart/form-data; 0123456789abcdef',
           'CONTENT_LENGTH' => '123',
           'rack.request.form_hash' => {
-              'name' => 'attachment_tap'
+              'name' => 'post aye_aye'
+          }
+      }
+
+      # @env_put = @env_post.dup.merge('REQUEST_METHOD' => "post")
+      @env_put = {
+          'REQUEST_METHOD' => 'PUT',
+          'CONTENT_TYPE' => 'multipart/form-data; 0123456789abcdef',
+          'CONTENT_LENGTH' => '123',
+          'rack.request.form_hash' => {
+              'name' => 'put aye_aye'
           }
       }
     end
 
-    describe 'no file fields' do
-      it 'update the request form hash to a empty array json string' do
-        @atap = Rack::AyeAye.new(FakeApp.new, {
-            :surrogate => FakeSurrogate
-        })
-        @env['rack.request.form_hash'].has_key?('files').must_equal false
-        @atap.call(@env)
-        @env['rack.request.form_hash'].has_key?('files').must_equal true
-        files = @env['rack.request.form_hash']['files']
-        files.must_be_kind_of String
-        parsed_files = JSON.parse(files)
-        parsed_files.must_be_kind_of Array
-        parsed_files.must_be_empty
-      end
-    end
+    describe 'POST request' do
+      describe 'no file fields' do
+        it 'update the request form hash to a empty array json string' do
+          @aye_aye = Rack::AyeAye.new(FakeApp.new, {
+              :surrogate => FakeSurrogate
+          })
+          @env_post['rack.request.form_hash'].has_key?('files').must_equal false
+          @aye_aye.call(@env_post)
+          @env_post['rack.request.form_hash'].has_key?('files').must_equal true
+          files = @env_post['rack.request.form_hash']['files']
+          files.must_be_kind_of String
+          parsed_files = JSON.parse(files)
+          parsed_files.must_be_kind_of Array
+          parsed_files.must_be_empty
+        end
+      end # no file fields
+    end # POST request
+
+    describe 'PUT request' do
+      describe 'no file fields' do
+        it 'do nothing' do
+          @aye_aye = Rack::AyeAye.new(FakeApp.new, {
+              :surrogate => FakeSurrogate
+          })
+          @env_put['rack.request.form_hash'].has_key?('files').must_equal false
+          @aye_aye.call(@env_put)
+          @env_put['rack.request.form_hash'].has_key?('files').must_equal false
+        end
+      end # no file fields
+    end # PUT request
+
 
     describe 'got attach files' do
       before do
-        @env['rack.request.form_hash']
+        @env_post['rack.request.form_hash']
+          .update('file1' => @file1, 'file2' => @file2)
+        @env_put['rack.request.form_hash']
           .update('file1' => @file1, 'file2' => @file2)
       end
 
       it "return 502 with ship! error" do
-        @atap = Rack::AyeAye.new(FakeApp.new, {
-            :surrogate => FakeSurrogateSick
-        })
-        result = @atap.call(@env)
-        result.must_be_kind_of Array
-        result.first.must_equal 502
+        [@env_post, @env_put].each { |call_env|
+          aye_aye = Rack::AyeAye.new(FakeApp.new, {
+              :surrogate => FakeSurrogateSick
+          })
+          result = aye_aye.call(call_env)
+          result.must_be_kind_of Array
+          result.first.must_equal 502
+        }
       end
 
       it "it update the env with ship! result" do
-        @atap = Rack::AyeAye.new(FakeApp.new, {
-            :surrogate => FakeSurrogate
-        })
-        @env['rack.request.form_hash'].has_key?('files').must_equal false
-        @atap.call(@env)
-        @env['rack.request.form_hash'].has_key?('files').must_equal true
-        files = @env['rack.request.form_hash']['files']
-        files.must_be_kind_of String
-        parsed_files = JSON.parse(files)
-        parsed_files.must_be_kind_of Array
-        parsed_files.any?.must_equal true
-        parsed_files.first["id"].must_equal '98d41a087efa9aa3b9ceb9d0'
-        parsed_files.first["original"].must_equal 'path/to/file'
+        [@env_put, @env_post].each do |env|
+          aye_aye = Rack::AyeAye.new(FakeApp.new, {
+              :surrogate => FakeSurrogate
+          })
+          env['rack.request.form_hash'].has_key?('files').must_equal false
+          aye_aye.call(env)
+          env['rack.request.form_hash'].has_key?('files').must_equal true
+          files = env['rack.request.form_hash']['files']
+          files.must_be_kind_of String
+          parsed_files = JSON.parse(files)
+          parsed_files.must_be_kind_of Array
+          parsed_files.any?.must_equal true
+          parsed_files.first["id"].must_equal '98d41a087efa9aa3b9ceb9d0'
+          parsed_files.first["original"].must_equal 'path/to/file'
+        end
       end
-    end
+
+    end # got attach files
+
   end # call
 end # Rack::AyeAye
