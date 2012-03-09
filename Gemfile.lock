@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    attachment_tap (1.0)
+    aye_aye (1.0)
       json
 
 GEM
@@ -14,5 +14,5 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  attachment_tap!
+  aye_aye!
   minitest

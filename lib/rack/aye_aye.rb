@@ -3,9 +3,9 @@ require 'tempfile'
 require 'json'
 
 module Rack
-  class AttachmentTap
+  class AyeAye
 
-    VERSION = "1.0"
+    VERSION = "1.1"
 
     # options :to(files) :path_rule?
     # :request_validator? session or permission
@@ -137,5 +137,5 @@ module Rack
       params.update(hash)
     end
 
-  end # AttachmentTap
+  end # AyeAye
 end # Rack

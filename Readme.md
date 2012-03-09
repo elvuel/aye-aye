@@ -1,9 +1,9 @@
-# Attachment tap
+# AyeAye
 ## USAGE
-  * gem build attachment_tap.gemspec
-  * gem install attachemnt_tap-VERSION.gem
-  * gem "attachment_tap", require: 'rack/attachment_tap'
-  * use Rack::AttachmentTap, :surrogate => Surrogate[,:to => 'files']
+  * gem build aye_aye.gemspec
+  * gem install aye_aye-VERSION.gem
+  * gem "aye_aye", require: 'rack/aye_aye'
+  * use Rack::AyeAye, :surrogate => Surrogate[,:to => 'files']
 
 
 ## Surrogate Example
