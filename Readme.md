@@ -6,7 +6,7 @@
   * use Rack::AyeAye, :detector => Detector[,:to => 'files']
 
 
-## Surrogate Example
+## Detector Example
 
 
 **gem "rest-client"**
