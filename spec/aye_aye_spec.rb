@@ -10,8 +10,8 @@ class FakeApp
   def call(env) end
 end
 
-class FakeSurrogate
-  def self.ship!(files)
+class FakeDetector
+  def self.chew!(files)
     [
       {
         :id => '98d41a087efa9aa3b9ceb9d0',
@@ -19,14 +19,10 @@ class FakeSurrogate
       }
     ].to_json
   end
-
-  def self.discharge!(files)
-    '{}'
-  end
 end
 
-class FakeSurrogateSick
-  def self.ship!(files)
+class FakeDetectorSick
+  def self.chew!(files)
     { error: 'file attach exception with md5s' }.to_json
   end
 
@@ -36,20 +32,17 @@ end
 describe Rack::AyeAye do
 
   describe '#initialize' do
-    it "raise ArgumentError if surrogate not respond to ship!" do
+    it "raise ArgumentError if surrogate not respond to chew!" do
       lambda { Rack::AyeAye.new(FakeApp.new) }.must_raise ArgumentError
-      lambda { Rack::AyeAye.new(FakeApp.new, { :surrogate => "123" }) }
+      lambda { Rack::AyeAye.new(FakeApp.new, { :detector => "123" }) }
         .must_raise ArgumentError
       obj, obj1, obj2 = "0", "1", "2"
-      def obj.ship!;end
-      def obj1.discharge!;end
-      def obj2.ship!;end
-      def obj2.discharge!;end
-      lambda { Rack::AyeAye.new(FakeApp.new, { :surrogate => obj }) }
+      def obj2.chew!;end
+      lambda { Rack::AyeAye.new(FakeApp.new, { :detector => obj }) }
         .must_raise ArgumentError
-      lambda { Rack::AyeAye.new(FakeApp.new, { :surrogate => obj1 }) }
+      lambda { Rack::AyeAye.new(FakeApp.new, { :detector => obj1 }) }
         .must_raise ArgumentError
-      Rack::AyeAye.new(FakeApp.new, { :surrogate => obj2 })
+      Rack::AyeAye.new(FakeApp.new, { :detector => obj2 })
         .must_be_kind_of Rack::AyeAye
     end
   end # initialize
@@ -60,12 +53,12 @@ describe Rack::AyeAye do
       @method = :post?
     end
     it 'request method is POST should return true' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method,  @key => 'POST').must_equal true
     end
 
     it 'require method not POST should return false' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method, @key => "post").must_equal false
     end
   end # post?
@@ -76,12 +69,12 @@ describe Rack::AyeAye do
       @method = :put?
     end
     it 'request method is PUT should return true' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method,  @key => 'PUT').must_equal true
     end
 
     it 'require method not PUT should return false' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method, @key => "put").must_equal false
     end
   end # put?
@@ -93,18 +86,18 @@ describe Rack::AyeAye do
     end
 
     it 'content type is multipart/form-data should return true' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method,  @key => 'multipart/form-data;12345').must_equal true
     end
 
     it 'content type is application/x-www-form-urlencoded should return true' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method,  @key => 'application/x-www-form-urlencoded;12345')
         .must_equal true
     end
 
     it 'return false' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method, @key => 'text/html').must_equal false
     end
   end # content_type_raw?
@@ -116,12 +109,12 @@ describe Rack::AyeAye do
     end
 
     it 'content length gt 0 return true' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method,  @key => '123').must_equal true
     end
 
     it 'content length lt 0 return true' do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method, @key => '0').must_equal false
     end
   end # has_content?
@@ -131,12 +124,12 @@ describe Rack::AyeAye do
       @method = :extract_file_fields
     end
     it "return nil if argument is not a Hash" do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       aye_aye.send(@method, 123).must_be_nil
     end
 
     it "should return a empty array if not contains FILE field" do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       fields = aye_aye.send(@method,
              { 'text' => '123', 'not_file' => {"not" => "yes"} })
       fields.must_be_kind_of Array
@@ -152,7 +145,7 @@ describe Rack::AyeAye do
           :name => 'name 2', :head => 'head 2',
           :tempfile => ::Tempfile.new('tempfile2.')
       }
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       fields = aye_aye.send(@method, {
           'text' => 'info', 'some' => 'some',
           'file1' => file1, 'file2' => file2}
@@ -171,7 +164,7 @@ describe Rack::AyeAye do
     end
 
     it "should return a Array" do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       ary = [{:name => 'first'}, {:name => 'second'}]
       keys = aye_aye.send(@method, ary)
       keys.must_be_kind_of Array
@@ -180,7 +173,7 @@ describe Rack::AyeAye do
     end
 
     it "should return a unique Array" do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       ary = [{:name => 'first'}, {:name => 'second'}, {:name => 'first[file]'}]
       keys = aye_aye.send(@method, ary)
       keys.must_be_kind_of Array
@@ -195,7 +188,7 @@ describe Rack::AyeAye do
     end
 
     it "should delete nothing" do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       env = { 'rack.request.form_hash' => {'text' => 'text', 'name' => 'ok' } }
       aye_aye.send(@method, env, [])
       env['rack.request.form_hash'].has_key?('text').must_equal true
@@ -203,7 +196,7 @@ describe Rack::AyeAye do
     end
 
     it "should delete the specify key" do
-      aye_aye = Rack::AyeAye.new(FakeApp.new, {:surrogate => FakeSurrogate })
+      aye_aye = Rack::AyeAye.new(FakeApp.new, {:detector => FakeDetector })
       env = { 'rack.request.form_hash' => {'text' => 'text', 'name' => 'ok' } }
       aye_aye.send(@method, env, ['text'])
       env['rack.request.form_hash'].has_key?('text').must_equal false
@@ -247,7 +240,7 @@ describe Rack::AyeAye do
       describe 'no file fields' do
         it 'update the request form hash to a empty array json string' do
           @aye_aye = Rack::AyeAye.new(FakeApp.new, {
-              :surrogate => FakeSurrogate
+              :detector => FakeDetector
           })
           @env_post['rack.request.form_hash'].has_key?('files').must_equal false
           @aye_aye.call(@env_post)
@@ -265,7 +258,7 @@ describe Rack::AyeAye do
       describe 'no file fields' do
         it 'do nothing' do
           @aye_aye = Rack::AyeAye.new(FakeApp.new, {
-              :surrogate => FakeSurrogate
+              :detector => FakeDetector
           })
           @env_put['rack.request.form_hash'].has_key?('files').must_equal false
           @aye_aye.call(@env_put)
@@ -283,10 +276,10 @@ describe Rack::AyeAye do
           .update('file1' => @file1, 'file2' => @file2)
       end
 
-      it "return 502 with ship! error" do
+      it "return 502 with chew! error" do
         [@env_post, @env_put].each { |call_env|
           aye_aye = Rack::AyeAye.new(FakeApp.new, {
-              :surrogate => FakeSurrogateSick
+              :detector => FakeDetectorSick
           })
           result = aye_aye.call(call_env)
           result.must_be_kind_of Array
@@ -294,10 +287,10 @@ describe Rack::AyeAye do
         }
       end
 
-      it "it update the env with ship! result" do
+      it "it update the env with chew! result" do
         [@env_put, @env_post].each do |env|
           aye_aye = Rack::AyeAye.new(FakeApp.new, {
-              :surrogate => FakeSurrogate
+              :detector => FakeDetector
           })
           env['rack.request.form_hash'].has_key?('files').must_equal false
           aye_aye.call(env)

@@ -3,7 +3,7 @@
   * gem build aye_aye.gemspec
   * gem install aye_aye-VERSION.gem
   * gem "aye_aye", require: 'rack/aye_aye'
-  * use Rack::AyeAye, :surrogate => Surrogate[,:to => 'files']
+  * use Rack::AyeAye, :detector => Detector[,:to => 'files']
 
 
 ## Surrogate Example
@@ -14,9 +14,9 @@
 
     require 'net/http/post/multipart'
 
-    class Surrogate
+    class Detector
 
-      def self.ship!(files)
+      def self.chew!(files)
         upload_files_hash = files.each_with_index.inject({}) do |hash, (item, index)|
           hash[index.to_s] = UploadIO.new(File.new(item[:tempfile].path,"rb"),
                                           item[:type], item[:filename])
@@ -30,9 +30,4 @@
       rescue Exception => e
         { :error => e.message }.to_json
       end
-
-      def self.discharge!(files)
-
-      end
-
     end

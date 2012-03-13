@@ -5,18 +5,17 @@ require 'json'
 module Rack
   class AyeAye
 
-    VERSION = "1.1"
+    VERSION = "1.2"
 
     # options :to(files) :path_rule?
     # :request_validator? session or permission
-    # :surrogate => a object respond_to ship! discharge!
+    # :detector => a object respond_to chew!
     def initialize(app, options={})
       @app        = app
       @to         = options[:to] || 'files'
-      @surrogate  = options[:surrogate]
-      unless @surrogate.respond_to?(:ship!) &&
-                @surrogate.respond_to?(:discharge!)
-        raise ArgumentError, 'surrogate missing'
+      @detector  = options[:detector]
+      unless @detector.respond_to?(:chew!)
+        raise ArgumentError, 'detector missing'
       end
     end
 
@@ -41,7 +40,7 @@ module Rack
         if fields.any?
           # TODO
           # based on request content_type?
-          json = @surrogate.ship!(fields)
+          json = @detector.chew!(fields)
           parsed_json = JSON.parse(json)
           if parsed_json.is_a?(Hash) && parsed_json["error"]
             return [502, {
