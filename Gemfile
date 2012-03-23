@@ -4,4 +4,6 @@ source "http://rubygems.org"
 gem "json"
 group :test do
   gem "minitest", require: "minitest/spec"
+  gem "rack"
+  gem "mocha"
 end

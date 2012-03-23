@@ -2,7 +2,11 @@ GEM
   remote: http://rubygems.org/
   specs:
     json (1.6.5)
+    metaclass (0.0.1)
     minitest (2.11.1)
+    mocha (0.10.4)
+      metaclass (~> 0.0.1)
+    rack (1.4.1)
 
 PLATFORMS
   ruby
@@ -10,3 +14,5 @@ PLATFORMS
 DEPENDENCIES
   json
   minitest
+  mocha
+  rack
